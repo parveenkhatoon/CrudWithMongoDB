@@ -1,13 +1,26 @@
-import {conn} from "../config/db.js"
+import {conn,JWT_SECRET} from "../config/db.js"
 import { User } from "../Model/User.js";
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 async function AddUser(req, res) {
     try {
-        const adduser = await User.create(req.body)
-        res.status(200).send({"data":adduser})
-        
+        const { Name, Email, Number, Password } = req.body;
+
+        const hashedPassword = await bcrypt.hash(Password, 10);
+
+        const adduser = await User.create({ Name, Email, Number, Password: hashedPassword });
+
+        const token = jwt.sign(
+            { id: adduser.id, EmailID: adduser.Email },
+            JWT_SECRET,
+            { expiresIn: '1h' } 
+        );
+
+        res.status(200).send({ data: adduser, token });
     } catch (error) {
-        res.status(500).send({ "Errormassage":error})
+        console.error(error);
+        res.status(500).send({ message: 'Internal Server Error', error: error.message });
     }
 }
 
