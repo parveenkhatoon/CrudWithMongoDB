@@ -3,7 +3,7 @@ import  bodyParser from "body-parser";
 import axios from "axios"
 import { conn } from "./config/db.js"
 import { User } from "./Model/User.js";
-import { AddUser ,GetUserDetails,UpdateUserDetails,DeleteUser} from "./Routes/user.js";
+import { AddUser ,GetUserDetails,UpdateUserDetails,DeleteUser,login} from "./Routes/user.js";
 const app = express()
 app.use(bodyParser.json());//Parses incoming JSON requests
 app.use(bodyParser.urlencoded({extended:true}));//Parses incoming requests with URL-encoded payloads.
@@ -61,6 +61,7 @@ app.post("/api/add/data",AddUser)
 app.get("/api/get/data",GetUserDetails)
 app.put("/api/update/data/:id",UpdateUserDetails)
 app.delete("/api/del/data/:id", DeleteUser)
+app.post("/api/login",login)
 
 
 app.listen(3000,()=>{

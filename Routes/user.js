@@ -60,4 +60,22 @@ async function DeleteUser(req, res) {
     }
 }
 
-export {AddUser,GetUserDetails,UpdateUserDetails,DeleteUser}
+async function login(req, res) {
+    try {
+        const { Email, Password } = req.body;
+        const user = await User.findOne({  Email });
+        const pass = await bcrypt.compare(Password, user.Password);
+        if (!pass) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+     
+        res.status(200).send({ data: user,message: 'User login successfully!!' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: 'Internal Server Error', error: error.message });
+    }
+    
+}
+
+export {AddUser,GetUserDetails,UpdateUserDetails,DeleteUser,login}
