@@ -2,6 +2,7 @@ import {conn,JWT_SECRET} from "../config/db.js"
 import { User } from "../Model/User.js";
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { validateRegistration, validateLogin } from "../util/validators.js";
 
 async function AddUser(req, res) {
     try {
@@ -63,12 +64,23 @@ async function DeleteUser(req, res) {
 async function login(req, res) {
     try {
         const { Email, Password } = req.body;
+       
+
+        let {errors,valid} = validateLogin({Email,Password});
+
+        if (!valid) {
+            console.log(valid);
+            
+            return res.status(400).send({ message: 'Invalid data', errors });
+        }
         const user = await User.findOne({  Email });
-        const pass = await bcrypt.compare(Password, user.Password);
-        if (!pass) {
+        if (!user) {
             return res.status(404).send({ message: 'User not found' });
         }
-     
+
+        const pass = await bcrypt.compare(Password, user.Password);
+
+
         res.status(200).send({ data: user,message: 'User login successfully!!' });
 
     } catch (error) {
@@ -78,4 +90,26 @@ async function login(req, res) {
     
 }
 
-export {AddUser,GetUserDetails,UpdateUserDetails,DeleteUser,login}
+//register user 
+async function registeruser(req, res){
+    try {
+        const { Name, Email, Number, Password } = req.body;
+        let {errors,valid} = validateRegistration({Name,Email,Password});
+        if (!valid) {
+            return res.status(400).send({ message: 'Invalid data', errors });
+        }
+        const hashedPassword = await bcrypt.hash(Password, 10);
+        const adduser = await User.create({ Name, Email, Number, Password: hashedPassword });
+        const token = jwt.sign(
+            { id: adduser.id, EmailID: adduser.Email },
+            JWT_SECRET,
+            { expiresIn: '1h' } 
+        );
+        res.status(200).send({ data: adduser, token });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: 'Internal Server Error', error: error.message });
+    }
+}
+
+export {AddUser,GetUserDetails,UpdateUserDetails,DeleteUser,login,registeruser}
